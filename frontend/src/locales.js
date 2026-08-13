@@ -1,208 +1,29 @@
 import { $config } from "app/session";
 import { $gettext, T } from "common/gettext";
 
-// Returns the id and messages of the current locale.
+// 個人版は日本語だけをサポートする。
+// options.FindLocale() は利用可能な言語が見つからない場合に先頭要素へ
+// fallback するため、ブラウザ言語・保存値・?locale= の値にかかわらず ja へ収束する。
+export let Options = [
+  {
+    text: "日本語",
+    value: "ja",
+  },
+];
+
+// 現在のロケールと Vuetify 用メッセージを返す。
 export const Locale = () => {
   const locale = $config.getLanguageLocale();
-  const isRTL = $config.isRtl();
 
   return {
-    locale: locale,
-    fallback: locale,
-    rtl: { [locale]: isRTL },
+    locale,
+    fallback: "ja",
+    rtl: { ja: false },
     messages: { [locale]: Messages(T) },
   };
 };
 
-// Contains the supported locales, their names and properties.
-export let Options = [
-  {
-    text: "English", // English
-    value: "en",
-  },
-  {
-    text: "Afrikaans", // Afrikaans (South Africa)
-    value: "af",
-  },
-  {
-    text: "Bahasa Indonesia", // Bahasa Indonesia
-    value: "id",
-  },
-  {
-    text: "Català", // Catalan
-    value: "ca",
-  },
-  {
-    text: "Čeština", // Czech
-    value: "cs",
-  },
-  {
-    text: "Dansk", // Danish
-    value: "da",
-  },
-  {
-    text: "Deutsch", // German
-    value: "de",
-  },
-  {
-    text: "Eesti", // Estonian
-    value: "et",
-  },
-  {
-    text: "Español", // Spanish
-    value: "es",
-  },
-  {
-    text: "Euskara", // Basque
-    value: "eu",
-  },
-  {
-    text: "Français", // French
-    value: "fr",
-  },
-  {
-    text: "Gaeilge", // Irish
-    value: "ga",
-  },
-  {
-    text: "Ελληνικά", // Greek
-    value: "el",
-  },
-  {
-    text: "עברית", // Hebrew
-    value: "he",
-    rtl: true,
-  },
-  {
-    text: "Hrvatski", // Croatian
-    value: "hr",
-  },
-  {
-    text: "Lietuvis", // Lithuanian
-    value: "lt",
-  },
-  {
-    text: "Magyar", // Hungarian
-    value: "hu",
-  },
-  {
-    text: "Melayu", // Malay
-    value: "ms",
-  },
-  {
-    text: "Norsk (Bokmål)", // Norwegian
-    value: "nb",
-  },
-  {
-    text: "Italiano", // Italian
-    value: "it",
-  },
-  {
-    text: "Nederlands", // Dutch
-    value: "nl",
-  },
-  {
-    text: "Polski", // Polish
-    value: "pl",
-  },
-  {
-    text: "Português", // Portuguese (Portugal)
-    value: "pt",
-  },
-  {
-    text: "Português do Brasil", // Portuguese (Brazil)
-    value: "pt_BR",
-  },
-  {
-    text: "Slovenčina", // Slovak
-    value: "sk",
-  },
-  {
-    text: "Slovenščina", // Slovene
-    value: "sl",
-  },
-  {
-    text: "Suomi", // Finnish
-    value: "fi",
-  },
-  {
-    text: "Svenska", // Swedish
-    value: "sv",
-  },
-  {
-    text: "Română", // Romanian
-    value: "ro",
-  },
-  {
-    text: "Türkçe", // Turkish
-    value: "tr",
-  },
-  {
-    text: "عربى", // Arabic
-    value: "ar",
-    rtl: true,
-  },
-  {
-    text: "کوردی", // Kurdish
-    value: "ku",
-    rtl: true,
-  },
-  {
-    text: "Беларуская", // Belarusian
-    value: "be",
-  },
-  {
-    text: "Български", // Bulgarian
-    value: "bg",
-  },
-  {
-    text: "Українська", // Ukrainian
-    value: "uk",
-  },
-  {
-    text: "Русский", // Russian
-    value: "ru",
-  },
-  {
-    text: "简体中文", // Chinese (Simplified)
-    value: "zh",
-  },
-  {
-    text: "繁體中文", // Chinese (Traditional)
-    value: "zh_TW",
-  },
-  {
-    text: "日本語", // Japanese
-    value: "ja",
-  },
-  {
-    text: "한국어", // Korean
-    value: "ko",
-  },
-  {
-    text: "Tiếng Việt", // Vietnamese
-    value: "vi",
-  },
-  {
-    text: "हिन्दी", // Hindi
-    value: "hi",
-  },
-  {
-    text: "ภาษาไทย", // Thai
-    value: "th",
-  },
-  {
-    text: "فارسی", // Persian
-    value: "fa",
-    rtl: true,
-  },
-  {
-    text: "Latviešu", // Latvian
-    value: "lv",
-  },
-];
-
-// Returns the Vuetify UI messages translated with Gettext.
+// Vuetify UI の翻訳対象。
 export const Messages = ($gettext) => {
   return {
     badge: $gettext("Badge"),
@@ -314,7 +135,7 @@ export const Messages = ($gettext) => {
   };
 };
 
-// Extra UI translation messages.
+// 個人版で管理画面等から動的に参照される追加翻訳語。
 export const ExtraMessages = () => {
   $gettext("Search");
   $gettext("Refresh");
@@ -324,52 +145,22 @@ export const ExtraMessages = () => {
   $gettext("Username");
   $gettext("Display Name");
   $gettext("Version");
-  $gettext("Portal");
   $gettext("Theme");
   $gettext("Labels");
   $gettext("Removed");
   $gettext("Database");
-  $gettext("Databases");
   $gettext("User");
-  $gettext("Users");
   $gettext("Account");
-  $gettext("Accounts");
   $gettext("Authentication");
-  $gettext("Web Login");
-  $gettext("Last Login");
-  $gettext("Role");
-  $gettext("Roles");
-  $gettext("Attributes");
-  $gettext("Scope");
-  $gettext("Scopes");
-  $gettext("Local");
   $gettext("Session");
-  $gettext("Sessions");
-  $gettext("Driver");
-  $gettext("Engine");
-  $gettext("Rotated");
-  $gettext("Severity");
-  $gettext("Activity");
   $gettext("Time");
-  $gettext("IP Address");
   $gettext("Site URL");
   $gettext("Message");
-  $gettext("Repeated");
   $gettext("Application");
-  $gettext("Applications");
-  $gettext("Node");
-  $gettext("Nodes");
   $gettext("Service");
-  $gettext("Services");
-  $gettext("Instance");
-  $gettext("Instances");
-  $gettext("Remove the selected instance from the cluster registry?");
 };
 
-// Backend notification message sources, mirroring `pkg/i18n/messages.go`.
-// Registering them here lets backend notifications (published with their English source id)
-// be translated by the frontend catalog and rendered in the user's UI language via `Tp`.
-// Strings keep Go printf placeholders (%s, %d); these are substituted positionally at render time.
+// バックエンド通知の翻訳元。課金・会員・クラスタ専用メッセージは個人版では登録しない。
 export const BackendMessages = () => {
   $gettext("Something went wrong, try again");
   $gettext("Unable to do that");
@@ -398,7 +189,6 @@ export const BackendMessages = () => {
   $gettext("Not available in read-only mode");
   $gettext("Please log in to your account");
   $gettext("Permission denied");
-  $gettext("Payment required");
   $gettext("Upload might be offensive");
   $gettext("Upload failed");
   $gettext("Upload to %s failed");
@@ -418,9 +208,6 @@ export const BackendMessages = () => {
   $gettext("Invalid link");
   $gettext("Invalid name");
   $gettext("Busy, please try again later");
-  $gettext("The wakeup interval is %s, but must be 1h or less");
-  $gettext("Your account could not be connected");
-  $gettext("Too many requests");
   $gettext("Insufficient storage");
   $gettext("Quota exceeded");
   $gettext("Registration disabled");
@@ -470,5 +257,4 @@ export const BackendMessages = () => {
   $gettext("Permanently deleted");
   $gettext("%s has been restored");
   $gettext("Successfully verified");
-  $gettext("Successfully activated");
 };
