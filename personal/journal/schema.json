@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "月次写真日記",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["month", "title", "body", "photos", "visibility"],
+  "properties": {
+    "month": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "body": {
+      "type": "string"
+    },
+    "visibility": {
+      "enum": ["private", "public"],
+      "default": "private"
+    },
+    "places": {
+      "type": "array",
+      "items": {"type": "string"},
+      "default": []
+    },
+    "albums": {
+      "type": "array",
+      "items": {"type": "string"},
+      "default": []
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["src", "alt"],
+        "properties": {
+          "src": {"type": "string", "minLength": 1},
+          "alt": {"type": "string", "minLength": 1},
+          "caption": {"type": "string"},
+          "place": {"type": "string"},
+          "photo_uid": {"type": "string"}
+        }
+      }
+    }
+  }
+}
