@@ -15,7 +15,7 @@
   - 月の本文
   - 場所
   - 写真ごとのキャプション
-  - 公開 / 非公開
+  - `draft / ready / public` の公開状態
 - Markdown / JSON など、機械可読なテキストとの連携
 - AIによる写真の説明、思い出の要約、検索補助
 - Google Photos からユーザーが選択した写真の取り込み
@@ -33,23 +33,29 @@
 
 ## 月次日記
 
-`personal/journal/` に、写真と文章を月単位で静的HTMLへ出力する最小実装があります。
+`personal/journal/` に、写真と文章を月単位で静的HTMLへ出力する実装があります。
 
 ```bash
 python personal/journal/build.py
 ```
 
-既定では `visibility: "public"` の月だけが `personal/journal/dist/` に出力されます。非公開月を公開成果物へ混ぜないことを最優先にします。
+既定では `status: "public"` の月だけが `personal/journal/dist/` に出力されます。`draft` は編集中、`ready` は本人確認済みだが非公開です。AI生成だけで `public` へ昇格させません。
+
+月一覧では各月の最初の写真を代表写真として、月・タイトル・場所をカード表示します。写真を大量に並べるのではなく、**数枚の写真と文章から月を思い出せること**を正準体験にします。
 
 ## 外部連携
 
 外部サービスは「現在の公式APIで確認できる範囲」だけを実装対象にします。
 
 - Google Photos: Picker API によるユーザー選択式インポート
-- OpenAI: 任意設定。写真と日記テキストから要約・タグ・思い出候補を生成
-- Amazon Photos: 2026-08-13 時点で公開された Amazon Photos 開発APIを公式開発者資料から確認できないため、ネイティブ自動同期は実装せず、ファイルのインポート / エクスポート境界だけを用意する
+- OpenAI / ChatGPT: MCPまたは明示的なテキスト入出力を境界に、写真説明・月次下書き・タグ候補を補助
+- Amazon Photos: 2026-08-13 時点で個人ライブラリ向け公開開発APIを公式資料から確認できないため、ネイティブ自動同期は実装せず、ファイルのインポート / エクスポート境界だけを用意する
 
 詳細は [`docs/ja-JP/INTEGRATIONS.md`](docs/ja-JP/INTEGRATIONS.md) を参照してください。
+
+## Android
+
+Android固有の写真管理ロジックは作りません。Web/PWAを正準実装とし、必要な場合だけ個人用の薄いAPKで包みます。方針は [`docs/ja-JP/ANDROID.md`](docs/ja-JP/ANDROID.md) に固定します。
 
 ## 作業台帳
 
