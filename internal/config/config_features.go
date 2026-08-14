@@ -168,9 +168,9 @@ func (c *Config) DisableSips() bool {
 	return c.options.DisableSips
 }
 
-// DisableVectors checks if vector graphics support is disabled.
+// DisableVectors checks if vector graphics support is disabled or unavailable.
 func (c *Config) DisableVectors() bool {
-	if c.options.DisableVectors || !c.Sponsor() {
+	if c.options.DisableVectors {
 		return true
 	} else if c.RsvgConvertBin() == "" {
 		c.options.DisableVectors = true
@@ -179,9 +179,9 @@ func (c *Config) DisableVectors() bool {
 	return c.options.DisableVectors
 }
 
-// DisableRsvgConvert checks if rsvg-convert is disabled for SVG conversion.
+// DisableRsvgConvert checks if rsvg-convert is disabled or unavailable.
 func (c *Config) DisableRsvgConvert() bool {
-	if c.options.DisableVectors || !c.Sponsor() {
+	if c.options.DisableVectors {
 		return true
 	}
 
