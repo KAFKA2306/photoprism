@@ -1,0 +1,46 @@
+name: One-shot commercial runtime audit
+
+on:
+  push:
+    branches:
+      - feat/personal-memory-journal-v2
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Audit commercial runtime references
+        shell: bash
+        run: |
+          set +e
+          echo '=== source references ==='
+          rg -n -i --hidden \
+            --glob '!.git/**' \
+            --glob '!node_modules/**' \
+            --glob '!frontend/src/locales/**' \
+            --glob '!assets/locales/**' \
+            '(isSponsor|Sponsor\(|\bsponsor(ship)?\b|\bmembership\b|\bbilling\b|upgrade now|upgrade|paid account)' \
+            . || true
+          echo '=== translation / locale files containing terms ==='
+          rg -l -i --hidden \
+            --glob '!.git/**' \
+            --glob '!node_modules/**' \
+            '(sponsor(ship)?|membership|billing|upgrade now|paid account)' \
+            frontend/src/locales assets/locales 2>/dev/null | sort || true
+
+      - name: Self-delete audit workflow
+        if: always()
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/one-shot-commercial-audit.yml
+          git commit -m 'chore: remove one-shot commercial audit workflow'
+          git push
