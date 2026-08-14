@@ -16,7 +16,6 @@ import PInputChipSelector from "component/input/chip-selector.vue";
 
 // Icons.
 import IconLivePhoto from "component/icon/live-photo.vue";
-import IconSponsor from "component/icon/sponsor.vue";
 import IconPrism from "component/icon/prism.vue";
 
 // User account management.
@@ -42,7 +41,6 @@ import PSettingsWebdav from "component/settings/webdav.vue";
 
 // Confirm.
 import PConfirmDialog from "component/confirm/dialog.vue";
-import PConfirmSponsor from "component/confirm/sponsor.vue";
 
 // Originals.
 import PFileClipboard from "component/file/clipboard.vue";
@@ -98,7 +96,6 @@ export function install(app) {
   app.component("PInputChipSelector", PInputChipSelector);
 
   app.component("IconLivePhoto", IconLivePhoto);
-  app.component("IconSponsor", IconSponsor);
   app.component("IconPrism", IconPrism);
 
   app.component("PSettingsApps", PSettingsApps);
@@ -117,7 +114,6 @@ export function install(app) {
   app.component("PShareDialog", PShareDialog);
 
   app.component("PConfirmDialog", PConfirmDialog);
-  app.component("PConfirmSponsor", PConfirmSponsor);
 
   app.component("PFileClipboard", PFileClipboard);
   app.component("PFileDeleteDialog", PFileDeleteDialog);

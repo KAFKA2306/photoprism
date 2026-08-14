@@ -410,7 +410,7 @@
               </v-checkbox>
             </v-col>
 
-            <v-col v-if="isSponsor" cols="12" sm="6" lg="4">
+            <v-col cols="12" sm="6" lg="4">
               <v-checkbox
                 v-model="settings.DisableVectors"
                 :disabled="isDemo"
@@ -458,7 +458,6 @@ export default {
       busy: this.$config.get("demo"),
       isDemo: this.$config.get("demo"),
       isPublic: this.$config.get("public"),
-      isSponsor: this.$config.isSponsor(),
       readonly: this.$config.get("readonly"),
       config: this.$config.values,
       rtl: this.$isRtl,

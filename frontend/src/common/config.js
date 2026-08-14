@@ -855,14 +855,6 @@ export default class Config {
     return !!this.values?.ext["pro"];
   }
 
-  isSponsor() {
-    if (!this.values || !this.values.sponsor) {
-      return false;
-    }
-
-    return !this.values.demo && !this.values.test;
-  }
-
   getName() {
     const s = this.get("name");
 
@@ -895,38 +887,6 @@ export default class Config {
 
   ce() {
     return this.getEdition() === "ce";
-  }
-
-  getTier() {
-    const tier = this.get("tier");
-
-    if (!tier) {
-      return 0;
-    }
-
-    return tier;
-  }
-
-  getMembership() {
-    const s = this.get("membership");
-
-    if (!s) {
-      return "ce";
-    } else if (s === "ce" && this.isSponsor()) {
-      return "essentials";
-    }
-
-    return s;
-  }
-
-  getCustomer() {
-    const s = this.get("customer");
-
-    if (!s) {
-      return "";
-    }
-
-    return s;
   }
 
   // themeAssetUri resolves a theme asset reference against the base URI (e.g.

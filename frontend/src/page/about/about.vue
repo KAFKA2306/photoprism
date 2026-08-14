@@ -2,7 +2,7 @@
   <div class="p-page p-page-about" tabindex="-1">
     <v-toolbar flat :density="$vuetify.display.smAndDown ? 'compact' : 'default'" color="secondary" class="page-toolbar p-page__navigation">
       <v-toolbar-title>
-        <span class="text-ltr">{{ $config.getAbout() }}{{ getMembership() }}</span>
+        <span class="text-ltr">{{ $config.getAbout() }}</span>
       </v-toolbar-title>
 
       <v-btn icon href="https://www.photoprism.app/" target="_blank" rel="noopener" class="action-info mx-2" :title="$gettext('Learn more')">
@@ -23,58 +23,6 @@
         </a>
       </p>
 
-      <template v-if="canUpgrade">
-        <h3 class="py-2">
-          {{ $gettext("PhotoPrism+ Membership") }}
-        </h3>
-        <p>
-          <span v-if="tier < 4">{{ $gettext("Become a member today, support our mission and enjoy our member benefits!") }}</span>
-          {{
-            $gettext("Your continued support helps us provide regular updates and remain independent, so we can fulfill our mission and protect your privacy.")
-          }}
-          {{
-            $gettext(
-              "Being 100% self-funded and independent, we can promise you that we will never sell your data and that we will always be transparent about our software and services."
-            )
-          }}
-        </p>
-        <p v-if="isSuperAdmin" class="text-center my-6">
-          <v-btn to="/upgrade" color="highlight" class="action-membership" rounded variant="flat">
-            {{ $gettext("Upgrade Now") }}
-            <v-icon :icon="rtl ? 'mdi-chevron-left' : 'mdi-chevron-right'" end></v-icon>
-          </v-btn>
-        </p>
-        <p v-else class="text-center my-6">
-          <v-btn
-            href="https://link.photoprism.app/membership"
-            target="_blank"
-            rel="noopener"
-            color="highlight"
-            class="action-membership"
-            rounded
-            variant="flat"
-          >
-            {{ $gettext("Learn more") }}
-            <v-icon :icon="rtl ? 'mdi-chevron-left' : 'mdi-chevron-right'" end></v-icon>
-          </v-btn>
-        </p>
-      </template>
-      <template v-else-if="isSuperAdmin">
-        <h3 class="py-2">{{ $gettext("Thank You for Your Support!") }} <v-icon size="20" color="primary">mdi-heart</v-icon></h3>
-        <p>
-          {{ $gettext("PhotoPrism is 100% self-funded and independent.") }}
-          {{
-            $gettext("Your continued support helps us provide regular updates and remain independent, so we can fulfill our mission and protect your privacy.")
-          }}
-          {{ $gettext("You are welcome to contact us at membership@photoprism.app for questions regarding your membership.") }}
-        </p>
-        <p class="text-center my-6">
-          <v-btn href="https://my.photoprism.app/dashboard" target="_blank" rel="noopener" color="highlight" class="action-membership" rounded variant="flat">
-            {{ $gettext("Manage Account") }}
-            <v-icon :icon="rtl ? 'mdi-chevron-left' : 'mdi-chevron-right'" end></v-icon>
-          </v-btn>
-        </p>
-      </template>
 
       <div class="py-2 text-columns text-ltr">
         <h3>Getting Started</h3>
@@ -185,21 +133,9 @@ export default {
     PAboutFooter,
   },
   data() {
-    const tier = this.$config.getTier();
-    const membership = this.$config.getMembership();
-    const isDemo = this.$config.isDemo();
-    const isPublic = this.$config.isPublic();
-    const isSuperAdmin = this.$session.isSuperAdmin();
     return {
       links,
       rtl: this.$isRtl,
-      tier: tier,
-      membership: membership,
-      canUpgrade: tier <= 4,
-      isDemo: isDemo,
-      isPublic: isPublic,
-      isSuperAdmin: isSuperAdmin && !isPublic && !isDemo,
-      isSponsor: this.$config.isSponsor(),
     };
   },
   mounted() {
@@ -207,22 +143,6 @@ export default {
   },
   unmounted() {
     this.$view.leave(this);
-  },
-  methods: {
-    getMembership() {
-      if (this.isDemo) {
-        return " Demo";
-      }
-
-      const tier = this.$config.getTier();
-      if (tier < 4) {
-        return " Community Edition";
-      } else if (tier === 4) {
-        return " Essentials";
-      }
-
-      return "";
-    },
   },
 };
 </script>
