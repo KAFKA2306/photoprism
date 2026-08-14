@@ -1,0 +1,54 @@
+name: One-shot commercial runtime audit
+
+on:
+  push:
+    branches:
+      - feat/personal-memory-journal-v2
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Audit commercial runtime residue
+        shell: bash
+        run: |
+          set -euo pipefail
+          residue=0
+          for pattern in 'Sponsor\(' 'isSponsor' 'Membership' 'Customer' 'PDialogSponsor' 'PConfirmSponsor' 'IconSponsor' 'name: "upgrade"' 'name: "membership"'; do
+            echo "=== $pattern ==="
+            if grep -R -nE --exclude-dir=locales --exclude='*.md' "$pattern" internal frontend/src; then
+              residue=1
+            fi
+          done
+          exit "$residue"
+
+      - name: Run focused Go tests
+        run: go test ./internal/config ./internal/commands
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Self-delete workflow
+        if: always()
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/one-shot-commercial-runtime-audit.yml
+          git commit -m 'chore: remove one-shot commercial runtime audit'
+          git push
