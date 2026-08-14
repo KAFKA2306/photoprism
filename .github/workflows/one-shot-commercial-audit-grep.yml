@@ -1,0 +1,47 @@
+name: One-shot commercial runtime audit grep
+
+on:
+  push:
+    branches:
+      - feat/personal-memory-journal-v2
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Audit commercial runtime references with grep
+        shell: bash
+        run: |
+          set -u
+          echo '=== runtime/source references ==='
+          find frontend/src internal pkg cmd -type f \
+            \( -name '*.go' -o -name '*.js' -o -name '*.ts' -o -name '*.vue' -o -name '*.html' -o -name '*.tmpl' \) \
+            ! -path 'frontend/src/locales/*' \
+            -print0 2>/dev/null \
+            | xargs -0 -r grep -nEi \
+              'isSponsor|Sponsor\(|sponsor(ship)?|membership|billing|upgrade now|paid account|name:[[:space:]]*["'"'"']upgrade["'"'"']' \
+            || true
+          echo '=== locale files containing commercial terms ==='
+          if [ -d frontend/src/locales ]; then
+            grep -RIlEi 'sponsor(ship)?|membership|billing|upgrade now|paid account' frontend/src/locales 2>/dev/null | sort || true
+          fi
+          if [ -d assets/locales ]; then
+            grep -RIlEi 'sponsor(ship)?|membership|billing|upgrade now|paid account' assets/locales 2>/dev/null | sort || true
+          fi
+
+      - name: Self-delete audit workflow
+        if: always()
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/one-shot-commercial-audit-grep.yml
+          git commit -m 'chore: remove one-shot grep audit workflow'
+          git push
