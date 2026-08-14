@@ -1,0 +1,45 @@
+name: One-shot commercial frontend cleanup
+
+on:
+  push:
+    branches:
+      - feat/personal-memory-journal-v2
+    paths:
+      - .github/workflows/one-shot-remove-commercial-frontend.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout canonical PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/personal-memory-journal-v2
+          fetch-depth: 0
+
+      - name: Apply commercial frontend cleanup
+        run: python tools/one_shot_remove_commercial_frontend.py
+
+      - name: Show remaining commercial runtime references
+        shell: bash
+        run: |
+          git grep -nEi 'Sponsor\(|isSponsor|getMembership|getCustomer|\$sponsorFeatures|confirm/sponsor|icon/sponsor|values\.sponsor|membership|billing|upgrade' -- \
+            'frontend/src/**' 'internal/**' 'cmd/**' ':!**/*_test.go' || true
+
+      - name: Remove one-shot assets and commit
+        shell: bash
+        run: |
+          rm -f tools/one_shot_remove_commercial_frontend.py
+          rm -f .github/workflows/one-shot-remove-commercial-frontend.yml
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'refactor: remove commercial frontend runtime gates'
+          git push origin HEAD:feat/personal-memory-journal-v2
