@@ -1,0 +1,93 @@
+name: PR1 prune commercial runtime
+
+on:
+  push:
+    branches: [feat/personal-memory-journal-v2]
+    paths:
+      - '.github/workflows/pr1-prune-commercial-runtime.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/personal-memory-journal-v2
+          fetch-depth: 0
+
+      - name: Remove commercial fields from client runtime schema
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('internal/config/client_config.go')
+          text = path.read_text()
+
+          exact = {
+              '\tSponsor          bool                `json:"sponsor"`\n': 1,
+              '\tTier             int                 `json:"tier"`\n': 1,
+              '\tMembership       string              `json:"membership"`\n': 1,
+              '\tCustomer         string              `json:"customer"`\n': 1,
+              '\tif c.Sponsor() {\n\t\tflags = append(flags, "sponsor")\n\t}\n\n': 1,
+          }
+          repeated = {
+              '\t\tSponsor:          c.Sponsor(),\n': 3,
+              '\t\tTier:             c.Hub().Tier(),\n': 3,
+              '\t\tMembership:       c.Hub().Membership(),\n': 3,
+          }
+
+          for needle, expected in exact.items():
+              actual = text.count(needle)
+              if actual != expected:
+                  raise SystemExit(f'expected {expected} occurrence(s), found {actual}: {needle!r}')
+              text = text.replace(needle, '')
+
+          for needle, expected in repeated.items():
+              actual = text.count(needle)
+              if actual != expected:
+                  raise SystemExit(f'expected {expected} occurrence(s), found {actual}: {needle!r}')
+              text = text.replace(needle, '')
+
+          customer_lines = (
+              '\t\tCustomer:         "",\n',
+              '\t\tCustomer:         c.Hub().Customer(),\n',
+          )
+          expected_customer = 3
+          actual_customer = sum(text.count(line) for line in customer_lines)
+          if actual_customer != expected_customer:
+              raise SystemExit(
+                  f'expected {expected_customer} Customer assignments, found {actual_customer}'
+              )
+          for line in customer_lines:
+              text = text.replace(line, '')
+
+          path.write_text(text)
+          PY
+          gofmt -w internal/config/client_config.go
+
+      - name: Remove one-shot workflow and commit canonical change
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/pr1-prune-commercial-runtime.yml
+          git add internal/config/client_config.go
+          git diff --cached --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "refactor: remove commercial client runtime fields"
+          git push origin HEAD:feat/personal-memory-journal-v2
+
+      - name: Audit residual commercial runtime references
+        run: |
+          set -euo pipefail
+          pattern='(json:"(sponsor|tier|membership|customer)"|\.Sponsor\(|Sponsor:|\.Tier\(|Tier:|\.Membership\(|Membership:|\.Customer\(|Customer:)'
+          if git grep -n -E "$pattern" -- '*.go' 'assets/**' 'frontend/**' 2>/dev/null; then
+            echo 'Residual commercial runtime references remain.'
+            exit 1
+          fi
+          echo 'No targeted commercial runtime references remain.'
+
+      - name: Test backend config package
+        run: go test ./internal/config
