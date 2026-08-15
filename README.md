@@ -2,7 +2,7 @@
 
 このリポジトリは、PhotoPrism を基盤にした **KAFKA2306 個人用の写真・旅行・日記・思い出管理システム**です。
 
-一般向けのフォトサービスを作ることは目的にしません。日本で個人利用するために必要な機能だけを残し、課金・スポンサー・商用・チーム運用・多言語など、本forkで使わない機能はコード、UI、設定、文書、テストを含めて削除します。
+一般向けのフォトサービスを作ることは目的にしません。日本で個人利用するために必要な機能だけを残し、課金・スポンサー・商用・チーム運用・多言語など、本forkで使わない機能はコード、UI、設定、文書、テストを含めて削減します。
 
 ## 何を残すか
 
@@ -21,15 +21,15 @@
 - Google Photos からユーザーが選択した写真の取り込み
 - Android では個人用 PWA / APK を利用できる形にする
 
-## 何を削除するか
+## 何を削減するか
 
 - membership / billing / sponsor / donation / upgrade
-- 個人単一環境で使わない Portal / Cluster / team 向け導線
+- 個人単一環境で使わない商用 Portal / team / cluster-management 導線
 - 日本語以外のUI言語、翻訳選択肢、不要な翻訳資産
 - 本forkで使わない商用・営業・コミュニティ誘導
 - 削除済み機能を参照する文書、設定、テスト、画像、リンク
 
-「画面から隠す」だけでは完了としません。最終的に不要機能の参照がコードベースに残っていないことを監査します。
+写真機能としての face clustering / People / Places は削除対象ではありません。「画面から隠す」だけでは完了とせず、不要機能の実行時参照が残っていないことを監査します。
 
 ## 月次日記
 
@@ -59,10 +59,14 @@ Android固有の写真管理ロジックは作りません。Web/PWAを正準実
 
 ## 作業台帳
 
-このリポジトリでは GitHub Issues が無効化されているため、[`docs/ja-JP/ROADMAP.md`](docs/ja-JP/ROADMAP.md) を正準の作業台帳にします。
+GitHub Issues を現在の作業台帳とします。[`docs/ja-JP/ROADMAP.md`](docs/ja-JP/ROADMAP.md) は中長期の方向性を扱い、Issue の現在状態を置き換えません。
 
 ## ライセンスと由来
 
-本forkは PhotoPrism のコードを基盤としています。リポジトリの `LICENSE` は GNU Affero General Public License v3 であり、課金機能とは無関係な法的条件なので削除しません。
+本forkは PhotoPrism のコードを基盤としています。
 
-上流由来の著作権表示・ライセンス表示・第三者ライセンスは、機能削除の対象とは分離して保持します。
+- upstream: https://github.com/photoprism/photoprism
+- upstream developer docs: https://docs.photoprism.app/developer-guide/
+- local repository: https://github.com/KAFKA2306/photoprism
+
+リポジトリの `LICENSE` は GNU Affero General Public License v3 であり、課金機能とは無関係な法的条件なので削除しません。上流由来の著作権表示・ライセンス表示・第三者ライセンスは、機能削減の対象とは分離して保持します。
