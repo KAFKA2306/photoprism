@@ -1,12 +1,12 @@
 # 個人版ロードマップ
 
-このファイルが正準の作業台帳です。GitHub Issues はこのリポジトリで無効化されているため、Issueの代わりに使用します。
+GitHub Issues を現在の作業台帳とします。この文書は中長期の方向性と完了条件だけを保持し、Issue / PR の現在状態を複製しません。
 
 ## 完了
 
-- [x] 個人版の目的・保持機能・削除機能を定義
+- [x] 個人版の目的・保持機能・削減機能を定義
 - [x] ルート README を日本語の個人版説明へ置換
-- [x] 外部連携の現行公式API境界を記録
+- [x] 外部連携の公式API境界を記録
 - [x] 月次写真日記の公開データ形式を定義
 - [x] 月次日記を `draft / ready / public` の3状態へ分離
 - [x] AI生成だけでは `public` にしない公開ゲートを定義
@@ -19,19 +19,21 @@
 - [x] Amazon Photos は公式個人ライブラリAPIを確認できるまでローカル import/export のみに固定
 - [x] OpenAI / ChatGPT は MCP または明示的テキストI/Oを境界とし、公開判断をAIへ委譲しない方針を固定
 - [x] AndroidはWeb/PWA正準 + 必要時のみ薄い個人APKとする方針を日本語文書化
-- [x] 月次日記CIを現行Actions majorへ更新
+- [x] hosted quality workflow を1本へ統合し、月次日記testとCodeQLを同じlaneで検証する構成へ整理
+- [x] `ClientConfig` から `Sponsor / Tier / Membership / Customer` を除去
 
-## 実コードから削除するもの
+## 削減対象
 
 - [x] `upgrade` / `connect` の利用者向けroute・component・文言を削除
-- [ ] sponsor / membership / customer / tier / billing 系backend configを削除
-- [ ] `ClientConfig` から `Sponsor / Tier / Membership / Customer` と関連するHub参照を削除
-- [ ] 個人単一環境で不要な Portal / Cluster / Instances 導線を削除
+- [ ] sponsor / membership / customer / tier / billing 系の実行時参照をrepository-wideで0にする
+- [ ] 個人単一環境で不要な commercial Portal / team / cluster-management 導線を削除
 - [x] 日本語以外の言語選択UIを削除
-- [ ] 日本語以外の翻訳カタログを削除
-- [ ] 英語などの利用者向け上流文書を日本語正準文書へ置換または削除
-- [ ] 上流由来で必要な法的文書・第三者ライセンスを削除対象から明確に分離
-- [ ] 上記削除後、参照残骸を機械監査して0件にする
+- [ ] 日本語以外の翻訳カタログを削減する
+- [ ] 利用者向け上流文書を日本語正準文書へ整理する
+- [x] 上流由来で必要な法的文書・第三者ライセンスは削除対象から分離する
+- [ ] 削減後の参照残骸を機械監査して0件にする
+
+PhotoPrismの写真機能として必要な face clustering / People / Places は削減対象に含めません。
 
 ## 個人機能
 
@@ -51,11 +53,12 @@
 ## 最終ゲート
 
 - [ ] 課金・スポンサー・アップグレード導線 0
-- [ ] `Sponsor / Membership / Tier / Customer / billing` の実行時config 0
+- [ ] `Sponsor / Membership / Tier / Customer / billing` の実行時参照 0
 - [ ] 日本語以外の利用者向けUI 0
-- [ ] 個人利用しない Portal / Cluster / team 機能 0
+- [ ] 個人利用しない commercial Portal / team / cluster-management 機能 0
 - [ ] 削除済み機能への dead link / dead config / dead test 0
 - [ ] 利用者向け文書は日本語のみ
-- [ ] 法的・第三者ライセンス文書は必要なものを保持
-- [ ] build / unit test / frontend test 成功
+- [x] 法的・第三者ライセンス文書は必要なものを保持
+- [ ] backend build / unit test / frontend build / frontend test 成功
+- [ ] 月次日記test成功
 - [ ] 公開成果物に `draft / ready` の月・秘密情報・外部原本URLが含まれない
