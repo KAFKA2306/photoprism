@@ -1,78 +1,46 @@
 # KAFKA2306 Photo Memories — Agent Guide
 
-**Last Updated:** 2026-08-15
+**Updated:** 2026-08-16
 
 ## Authority
 
-Use this order when facts conflict:
+Current user instruction > current official primary sources and upstream > current repository/runtime state > this file > historical prose.
 
-1. Current user instruction
-2. Current official primary sources and upstream PhotoPrism source/docs
-3. Current GitHub repository, PR, Issue, and production state
-4. This file
-5. Historical conversation, old runs, comments, and memory
+Re-check mutable facts before acting. Subtree `AGENTS.md` files add path-specific detail but must not override this product boundary.
 
-Historical state is evidence, not ground truth. Re-check it before acting.
+## Product Boundary
 
-## Product Goal
+This fork is a personal Japanese photo-memory archive built on PhotoPrism. Preserve photo/video indexing, search, albums, people, places, sharing, and monthly memories with `draft / ready / public` states. `personal/journal/memory-month.json` is the user-facing canonical memory boundary; Web/PWA is the canonical client.
 
-This repository is a personal Japanese photo-memory archive built on PhotoPrism. PhotoPrism remains the indexing / metadata engine; the user-facing canonical boundary is `memory-month.json` under `personal/journal/`.
+Do not re-introduce billing, membership, sponsor, upgrade, donation, sales, team, Portal, or cluster-management product surfaces unless explicitly requested. Android may only be a thin wrapper. Do not duplicate AI, import, or publishing logic outside the canonical boundary.
 
-Keep the product centered on:
+Preserve licenses, notices, attribution, and upstream-compatible Go/Vue structure unless removal is verified safe.
 
-- photo and video indexing, search, albums, people, places, and sharing
-- monthly memories with `draft / ready / public` publication states
-- Japanese-only product UI for this fork
-- Google Photos user-selected import boundaries
-- Web/PWA as the canonical client; Android is only a thin wrapper when needed
+## Change Discipline
 
-Do not re-introduce billing, membership, sponsor, upgrade, donation, sales, or team/commercial product paths unless explicitly requested.
-
-## Preserve
-
-- `LICENSE`, notices, copyright, and upstream attribution
-- PhotoPrism photo/index/search/metadata behavior required by the personal product
-- face and place clustering that belongs to photo functionality
-- upstream-compatible Go / Vue build structure unless removing it is verified safe
-
-Upstream: https://github.com/photoprism/photoprism
-Developer docs: https://docs.photoprism.app/developer-guide/
-
-## Canonical Work Tracking
-
-GitHub Issues are enabled and are the task ledger. `docs/ja-JP/ROADMAP.md` describes product direction; it is not a substitute for current Issue state.
-
-For implementation work, inspect the current PR/Issue and repository state before trusting their older descriptions. Keep PR bodies updated when blockers have already been removed.
+- Before editing a subtree, read its nearest `AGENTS.md`.
+- Prefer deletion and reuse over addition.
+- One capability gets one canonical implementation and one validation path.
+- The existing `Makefile` is the command surface. Do not add Taskfile, extra linters, build orchestrators, or parallel scripts unless they replace an existing owner and reduce measured maintenance.
+- Fail fast: do not add broad catches, retries, or fallback defaults that hide unexpected failures. Put retry/restart policy in infrastructure where possible.
+- Keep diffs focused. Never commit secrets, private photo paths, face exports, credentials, keystores, or originals.
 
 ## Verification
 
-Prefer the smallest focused check that proves the change, then run the broader gate before merge.
+`PASS` requires current execution evidence. Documentation, old runs, or implementation prose alone remain `UNVERIFIED`.
 
-Personal journal:
+Use the smallest focused check first, then the applicable broader gate before merge.
 
 ```bash
 python -m unittest discover -s personal/journal/tests -v
 ```
 
-Go / frontend entry points remain the repository-native commands documented by the Makefile and subtree `AGENTS.md` files. For changes that affect the application, use the relevant focused tests, then the applicable build/lint/test gates before merge.
+For the application, use existing Makefile targets such as `make test-short`, `make test-js`, `make build-go`, `make build-js`, and the relevant lint target; `make help` is the command index.
 
-Hosted workflow policy:
+`.github/workflows/codeql-analysis.yml` is the single hosted workflow. It runs on trusted `develop` / `release` pushes, weekly schedule, or manual dispatch; PR synchronization intentionally does not create hosted runs. An `action_required` run with zero jobs is workflow-state evidence, not evidence of a CodeQL vulnerability finding.
 
-- `.github/workflows/codeql-analysis.yml` is the single hosted quality workflow.
-- It runs on trusted `develop` / `release` pushes, weekly schedule, or manual dispatch.
-- It verifies the personal journal once and runs CodeQL for Go and JavaScript/TypeScript.
-- Pull-request synchronization intentionally does not create hosted runs. Pre-merge verification must therefore be reported from focused/local checks or an explicit manual run.
-- Historical `action_required` runs with zero jobs are workflow-state records, not evidence that CodeQL found a vulnerability.
+If any required gate is unexecuted or failing, keep the PR Draft/UNVERIFIED.
 
-## Change Discipline
+## Tracking
 
-- Prefer deletion and reuse over adding parallel systems.
-- One capability should have one canonical implementation and one canonical validation path.
-- Do not add Ruff, Biome, Oxlint, Nx, Turborepo, prek, or similar tooling merely because it is modern. Add a tool only when it replaces an existing owner or closes a measured gap without duplicating the native PhotoPrism toolchain.
-- Do not create Android, AI, import, or publishing logic that duplicates the Web / `memory-month.json` boundary.
-- Never commit secrets, private photo paths, face metadata exports, credentials, keystores, or private originals.
-- Keep unrelated upstream cleanup out of a functional change unless it directly reduces the maintained surface and is independently verifiable.
-
-## Completion
-
-A change is complete only when the current source, current task state, and verification evidence agree. Do not mark a PR ready or merge solely because an old checklist says the work is done.
+GitHub Issues are the current task ledger. `docs/ja-JP/ROADMAP.md` is direction, not current task state. Keep PR descriptions synchronized with the current repository and evidence.
