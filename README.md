@@ -1,5 +1,7 @@
 # KAFKA2306 Photo Memories
 
+[![CodeQL](https://github.com/KAFKA2306/photoprism/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/KAFKA2306/photoprism/actions/workflows/codeql-analysis.yml)
+
 このリポジトリは、PhotoPrism を基盤にした **KAFKA2306 個人用の写真・旅行・日記・思い出管理システム**です。
 
 一般向けのフォトサービスを作ることは目的にしません。日本で個人利用するために必要な機能だけを残し、課金・スポンサー・商用・チーム運用・多言語など、本forkで使わない機能はコード、UI、設定、文書、テストを含めて削除します。
