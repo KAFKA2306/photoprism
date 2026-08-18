@@ -1,301 +1,120 @@
-PhotoPrism — Backend CODEMAP
+# KAFKA2306 Photo Memories — Code Map
 
-**Last Updated:** August 7, 2026
+**Updated:** 2026-08-18
 
-Purpose
-- Give agents and contributors a fast, reliable map of where things live and how they fit together, so you can add features, fix bugs, and write tests without spelunking.
-- Sources of truth: prefer Makefile targets and the Developer Guide linked in AGENTS.md.
+このファイルは、このforkで現在使う構造だけを示します。上流PhotoPrismの全edition、配布、商用運用を網羅する文書ではありません。
 
-Quick Start
-- Inside dev container (recommended):
-  - Install deps: `make dep`
-  - Build backend: `make build-go`
-  - Lint Go (golangci-lint): `make lint-go` (uses `.golangci.yml`; prints findings without failing) or run both stacks with `make lint`
-  - Run server: `./photoprism start`
-  - Open: http://localhost:2342/ or https://app.localssl.dev/ (Traefik required)
-- On host (manages Docker):
-  - Build image: `make docker-build`
-  - Start services: `docker compose up -d`
-  - Logs: `docker compose logs -f --tail=100 photoprism`
+## 正準入口
 
-Executables & Entry Points
-- CLI app (binary name across docs/images is `photoprism`):
-  - Main: `cmd/photoprism/photoprism.go`
-  - Commands registry: `internal/commands/commands.go` (array `commands.PhotoPrism`)
-  - Catalog helpers: `internal/commands/catalog` (DTOs and builders to enumerate commands/flags; Markdown renderer)
-- Web server:
-  - Startup: `internal/commands/start.go` → `server.Start` (starts HTTP(S), workers, session cleanup)
-  - HTTP server: `internal/server/start.go` (compression, security, healthz, readiness, TLS/AutoTLS/unix socket)
-  - Routes: `internal/server/routes.go` (registers all v1 API groups + UI, WebDAV, sharing, .well-known)
-  - API group: `APIv1 = router.Group(conf.BaseUri("/api/v1"), Api(conf))`
+- `README.md` — 個人用プロダクト境界と利用方法
+- `AGENTS.md` — 変更規則と検証規則
+- `Makefile` — build / test / lint / journal / local environment のコマンド入口
+- `compose.yaml` — ローカルDocker環境の唯一のCompose設定
+- `.env.example` — ローカル環境で設定する値
+- `LICENSE`, `NOTICE` — 上流由来の法的表示
 
-High-Level Package Map (Go)
-- `internal/api` — Gin handlers and Swagger annotations; only glue, no business logic
-- `internal/commands` — CLI command definitions and orchestration (`start`, `index`, `import`, `migrate`, etc.); `commands.go` wires them into the app and subpackages like `catalog` emit CLI documentation.
-- `internal/server` — HTTP server, middleware, routing, static/ui/webdav
-- `internal/config` — configuration, flags/env/options, client config, DB init/migrate
-- `internal/entity` — GORM v1 models, queries, search helpers, migrations
-  - Label lookup helpers now live in `internal/entity/label*.go`; reuse `FindLabels(...)`, `FindLabelIDs(...)`, and `LabelSlugs(...)` for homophone-aware exact-name/slug resolution instead of duplicating slug SQL in callers.
-- `internal/photoprism` — core domain logic (indexing, import, faces, thumbnails, cleanup)
-- `internal/ai/vision` — multi-engine computer vision pipeline (models, adapters, schema). Adapter docs: [`internal/ai/vision/openai/README.md`](internal/ai/vision/openai/README.md) and [`internal/ai/vision/ollama/README.md`](internal/ai/vision/ollama/README.md).
-- `internal/workers` — background schedulers (index, vision, sync, meta, backup)
-- `internal/auth` — ACL, sessions, OIDC
-- `internal/service` — cluster/portal, maps, hub, webdav
-  - WebDAV client docs: `internal/service/webdav/README.md`
-  - Key WebDAV client behavior:
-    - Recursive directory discovery prefers `PROPFIND Depth: infinity` and falls back to iterative `Depth: 1` traversal for incompatible servers.
-    - Hidden dotfiles and entries inside hidden dot-directories are excluded from listings and fallback traversal because they often represent lock files, partial uploads, or provider metadata.
-    - Service timeouts apply to control operations (`Files`, `Directories`, `Mkdir`, `Delete`), while `Upload` and `Download` avoid total request deadlines and instead use connection-level safeguards.
-- `internal/event` — logging, pub/sub, audit; canonical outcome tokens live in `pkg/log/status` (use helpers like `status.Error(err)` when the sanitized message should be the outcome). Docs: `internal/event/README.md`.
-- `internal/ffmpeg`, `internal/thumb`, `internal/meta`, `internal/form`, `internal/mutex` — media, thumbs, metadata, forms, coordination. Docs: `internal/ffmpeg/README.md`, `internal/meta/README.md`.
-- `pkg/*` — reusable utilities (must never import from `internal/*`), e.g. `pkg/clean`, `pkg/enum`, `pkg/fs`, `pkg/txt`, `pkg/http/header`, `pkg/authn/authtoken`
+## 個人用の成果物
 
-Templates & Static Assets
-- Entry HTML lives in `assets/templates/index.gohtml`, which includes the splash markup from `app.gohtml` and the SPA loader from `app.js.gohtml`.
-- OIDC login completion for the SPA is bridged through `assets/templates/auth.gohtml`, which clears legacy/namespaced session keys and writes the session into the preferred namespaced browser store selected by the login UI toggle in `frontend/src/page/auth/login.vue`.
-- The browser check logic resides in `assets/static/js/browser-check.js` and is included via `app.js.gohtml`; it performs capability checks (Promise, fetch, AbortController, `script.noModule`, etc.) before the main bundle runs.
-- Update this file (and the partial) in lockstep with `pro/assets/templates/index.gohtml`, `plus/assets/templates/index.gohtml`, and `portal/assets/templates/index.gohtml`, because those editions import the same partial.
-- Keep the script tag order unchanged so the browser check executes before the main bundle.
-- `splash.gohtml` renders the loading screen text while the bundle loads; styles are in `frontend/src/css/splash.css`.
-- When adjusting browser support messaging, update both the loader partial and splash styles so the warning message stays consistent across editions.
-- Service worker routes live in `internal/server/routes_webapp.go`. Handlers for `sw.js`, `sw-scope-cleanup.js`, and Workbox runtime files (`/workbox-:hash`) are defined there so service workers run under both the site root and a base URI; remember Gin’s `:hash` parameter excludes the `.js` suffix, so the handler/test matches the full filename manually.
+- `personal/journal/build.py` — 月次日記の静的HTML生成
+- `personal/journal/schema.json` — 月次データのschema
+- `personal/journal/tests/` — 月次日記の検証
+- `personal/journal/README.md` — 月次データと公開状態の説明
 
-HTTP API
-- Handlers live in `internal/api/*.go` and are registered in `internal/server/routes.go`.
-- Annotate new endpoints in handler files; generate docs with: `make fmt-go swag-fmt && make swag`.
-- Do not edit `internal/api/swagger.json` by hand.
-- Swagger notes:
-  - Use full `/api/v1/...` in every `@Router` annotation (match the group prefix).
-  - Annotate only public handlers; skip internal helpers to avoid stray generic paths.
-  - `make swag-json` runs a stabilization step (`swaggerfix`) removing duplicated enums for `time.Duration`; API uses integer nanoseconds for durations.
-- `/api/v1/metrics` (see `internal/api/metrics.go`) exposes Prometheus metrics, including cached filesystem/account usage derived from `config.Usage()`, registered user/guest totals, and portal cluster node counts when `NodeRole=portal`; the handler returns the standard Prometheus exposition content type (`text/plain; version=0.0.4`).
-- Common groups in `routes.go`: sessions, OAuth/OIDC, config, users, services, thumbnails, video, downloads/zip, index/import, photos/files/labels/subjects/faces, batch ops, cluster, technical (metrics, status, echo).
-- Hidden search behavior (used by the hidden route under the configured frontend URI, default `/library/hidden` for CE/Plus/Pro and `/portal/hidden` for Portal) is implemented in `internal/entity/search/photos.go`:
-  - `frm.Hidden` enforces `photos.photo_quality = -1` and `photos.deleted_at IS NULL`.
-  - Non-hidden searches exclude errored files by default (`files.file_error = ''`) unless `frm.Error` is explicitly set.
-- Search DTOs in `internal/entity/search/photos_results.go` expose `FileError` (`files.file_error`) so clients can render hidden reasons without loading full file details first.
+月次日記は `draft / ready / public` を区別し、公開成果物は `public` だけを対象にします。
 
-Configuration & Flags
-- Options struct: `internal/config/options.go` with `yaml:"…"` (for `defaults.yml`/`options.yml`), `json:"…"` (clients/API), and `flag:"…"` (CLI flags/env) tags.
-  - For secrets/internals: `json:"-"` disables JSON processing to prevent values from being exposed through the API (see `internal/api/config_options.go`).
-  - If needed: `yaml:"-"` disables YAML processing; `flag:"-"` prevents `ApplyCliContext()` from assigning CLI values (flags/env variables) to a field, without affecting the flags in `internal/config/flags.go`.
-  - Annotations may include edition tags like `tags:"plus,pro"` to control visibility (see `internal/config/options_report.go` logic).
-- Global flags/env: `internal/config/flags.go` (`EnvVars(...)`)
-  - Available flags/env: `internal/config/cli_flags_report.go` + `internal/config/report_sections.go` → surfaced by `photoprism show config-options --md/--json`
-  - YAML options mapping: `internal/config/options_report.go` + `internal/config/report_sections.go` → surfaced by `photoprism show config-yaml --md/--json`
-  - Report current values: `internal/config/report.go` → surfaced by `photoprism show config` (alias `photoprism config --md`).
-  - CLI commands catalog: `internal/commands/show_commands.go` → surfaced by `photoprism show commands` (Markdown by default; `--json` alternative; `--nested` optional tree; `--all` includes hidden commands/flags; nested `help` subcommands omitted).
-- Precedence: `defaults.yml` < CLI/env < `options.yml` (global options rule). See Agent Tips in `AGENTS.md`.
-- Config-owned persistence helpers:
-  - `Config.SaveOptionsPatch(...)` in `internal/config/config.go` for generic `options.yml` merge/write/reload.
-  - `Config.SaveClusterOptionsUpdate(...)` in `internal/config/config_cluster.go` for cluster metadata updates (`ClusterUUID`, `NodeUUID`, `NodeClientID`, DB fields, etc.).
-- Getters are grouped by topic, e.g. DB in `internal/config/config_db.go`, server in `config_server.go`, TLS in `config_tls.go`, etc.
-- Client Config (read-only)
-  - Endpoint: GET `/api/v1/config` (see `internal/api/api_client_config.go`).
-  - CDN behavior: Requests carrying CDN headers are rejected with `404` to prevent intermediary cache mix-ups between public and session-specific config payloads.
-  - Assembly: Built from `internal/config/client_config.go` (not a direct serialization of Options) plus extension values registered via `config.Register` in `internal/config/extensions.go`.
-  - Updates: Back-end calls `UpdateClientConfig()` to publish "config.updated" over websockets after changes (see `internal/api/config_options.go` and `internal/api/config_settings.go`).
-  - ACL/mode aware: Values are filtered by user/session and may differ for public vs. authenticated users.
-  - Don’t expose secrets: Treat it as client-visible; avoid sensitive data. To add fields, extend client values via `config.Register` rather than exposing Options directly.
-  - Refresh cadence: The web UI (non‑mobile) also polls for updates every 10 minutes via `$config.update()` in `frontend/src/app.js`, complementing the websocket push.
-- OIDC Groups (Pro-Only)
-  - Config options (tagged `pro`, flags hidden in CE): `oidc-group-claim` (default `groups`), `oidc-group` (required membership list), `oidc-group-role` (mapping `GROUP=ROLE`).
-  - Parsing/helpers: `internal/auth/oidc/groups.go` normalizes IDs, detects Entra `_claim_names` overage, maps groups→roles, and enforces required membership in `internal/api/oidc_redirect.go`.
-  - Overage: if `_claim_names.groups` is present and no groups are returned, login fails when required groups are configured; Graph fetch is not implemented yet.
+## Backend
 
-Database & Migrations
-- Driver: GORM v1 (`github.com/jinzhu/gorm`). No `WithContext`. Use `db.Raw(stmt).Scan(&nop)` for raw SQL.
-- Entities and helpers: `internal/entity/*.go` and subpackages (`query`, `search`, `sortby`).
-- Migrations engine: `internal/entity/migrate/*` — run via `config.MigrateDb()`; CLI: `photoprism migrate` / `photoprism migrations`.
-- DB init/migrate flow: `internal/config/config_db.go` chooses driver/DSN, sets `gorm:table_options`, then `entity.InitDb(migrate.Opt(...))`.
+- `cmd/photoprism/` — CLI entry point
+- `internal/commands/` — CLI command orchestration
+- `internal/server/` — HTTP serverとroutes
+- `internal/api/` — HTTP API handlers
+- `internal/config/` — configurationとdatabase initialization
+- `internal/entity/` — GORM models、queries、migrations
+- `internal/photoprism/` — indexing、import、faces、media処理の中心
+- `internal/ai/` — computer vision / AI integration
+- `internal/workers/` — background workers
+- `internal/auth/` — sessions、ACL、認証実装
+- `internal/service/` — 外部サービス連携。Placesもここに含まれるため、directory単位では削除しない
+- `internal/ffmpeg/`, `internal/thumb/`, `internal/meta/` — media処理
+- `pkg/` — `internal/` に依存しない共通utility
 
-AuthN/Z & Sessions
-- Session model and cache: `internal/entity/auth_session*` and `internal/auth/session/*` (cleanup worker).
-  - `internal/entity/auth_session_jwt.go` builds transient sessions from portal-issued JWTs; used by `internal/api/api_auth_jwt.go` when nodes authenticate portal requests.
-- ACL: `internal/auth/acl/*` — roles, grants, scopes; use constants; avoid logging secrets, compare tokens constant‑time; for scope checks use `acl.ScopePermits` / `ScopeAttrPermits` instead of rolling your own parsing.
-- OIDC: `internal/auth/oidc/*`.
-- URL tokens (signed downloads, previews): `pkg/authn/authtoken` is the dependency-free primitive that mints/verifies the bunny.net-compatible HMAC-SHA256 token format (docs: `pkg/authn/authtoken/README.md`); `internal/auth/tokens` holds the app-level wiring — a generic `Signer` (key + signature path) with one instance per kind (`Download` today, previews next), the delivery policy (`DownloadToken`/`SignDownload`/`VerifyDownload`/`IsCoarseDownload`), and `Derive` for the not-yet-signed preview token. Full details, including the delivery rules and test gotchas, are in `internal/auth/tokens/README.md`. It is a Propagate-configured leaf like `thumb`/`dl`/`ttl`, so it imports neither `config` nor `get`: `Config.Propagate` sets the signer key/path plus `tokens.PublicMode`/`CoarseDownload`, and config owns `Config.TokenSigningKey` (the shared `config/keys/signing.key` secret) and `DownloadTokenMaxAge` (the `download-token-maxage` option, effective value in `ttl.DownloadToken`). Download tokens are **stateless** — no per-session/user storage. Request-side resolution in `internal/api/auth_tokens.go`: `AuthDownload(c) (sess, valid)` is the merged gate the endpoints use (session-or-coarse authorization + the resolved session in one call, auditing a denial centrally like `AuthAny`), `InvalidDownloadToken` is a thin wrapper, and `DownloadSession` resolves a signed `?t=` token to its session — accepting, before the token, a **Portal cluster JWT in a request header** (`authAnyJWT` requiring `acl.AccessAll` on files, so only a trusted full-access principal qualifies; a transient JWT session can't back a `?t=` token, and only JWTs — not arbitrary bearer/Basic-auth headers — take this path, which otherwise falls through to `?t=`). Scoped consumers: `DownloadAlbum` (`internal/api/download_album.go`), `GetDownload` (`internal/api/download.go`), `GetPhotoDownload` (`internal/api/photos.go`), `ZipDownload` (`internal/api/zip.go`).
+### 削除時の注意
 
-Media Processing
-- Thumbnails: `internal/thumb/*` and helpers in `internal/photoprism/mediafile_thumbs.go`.
-- Metadata: `internal/meta/*`.
-- FFmpeg integration: `internal/ffmpeg/*`.
-- 360° originals (Insta360 `.insp`/`.insv`, fisheye DNG): recognized in `pkg/fs/file_types.go` and `pkg/media/insta360.go`, with the projection vocabulary in `pkg/media/projection`. Detection and capture grouping live in `internal/photoprism/mediafile_insta360.go` / `mediafile_projection.go`; `internal/ffmpeg/v360.go` builds the dewarp commands that `convert_image*.go` and `convert_video_avc.go` run, always writing a derivative and never touching the original. Only the equirectangular derivative is reported to the viewer (`sphereProjection` in `internal/entity/search/photos_results.go`); `fisheye:` finds the originals behind it.
-- HEIF tooling: distribution binaries live under `scripts/dist/install-libheif.sh`; regenerate archives with `make build-libheif-*` (wraps `scripts/dist/build-libheif.sh` for each supported distro/arch) before publishing to `dl.photoprism.app/dist/libheif/`.
-- Folder album consistency:
-  - `internal/entity/folder.go` keeps `FindFolder(...)` unscoped for create/index conflict handling, so a soft-deleted row cannot cause repeated insert/fail/not-found loops.
-  - `internal/photoprism/index.go` runs `entity.ReconcileOriginalsFolderAlbums(...)` only on forced rescans, after the file walk, so regular indexing stays lightweight while complete rescans repair stale/missing folder albums.
+`internal/service/` には個人利用で不要な上流サービス連携と、残すPlaces系処理が混在しています。商用・Portal・cluster関連を削るときは参照元とfocused testを確認し、directoryごとの一括削除をしません。
 
-Background Workers
-- Scheduler and workers: `internal/workers/*.go` (index, vision, meta, sync, backup, share); started from `internal/commands/start.go`.
-- Auto indexer: `internal/workers/auto/*`.
+## Frontend
 
-Cluster / Portal
-- Node types: `internal/service/cluster/const.go` (`cluster.RoleInstance`, `cluster.RolePortal`, `cluster.RoleService`).
-- Node bootstrap & registration: `internal/service/cluster/node/*` (HTTP to Portal; do not import Portal internals).
-  - Registration now retries once on 401/403 by rotating the node client secret with the join token and persists the new credentials (falling back to in-memory storage if the secrets directory is read-only).
-  - Theme sync logs explicitly when refresh/rotation occurs so operators can trace credential churn in standard log levels.
-- Registry/provisioner: `internal/service/cluster/registry/*`, `internal/service/cluster/provisioner/*`.
-- Theme endpoint (server): GET `/api/v1/cluster/theme`; client/CLI installs theme only if missing or no `app.js`.
-- Portal-only extensions: `portal/internal/portal` (Portal defaults, flags, provisioning options, `/i/*` proxy router).
+- `frontend/src/` — Vue frontend
+- `frontend/src/page/` — pages
+- `frontend/src/component/` — reusable components
+- `frontend/src/css/` — styles
+- `assets/templates/` — initial HTML templates
 
-Logging & Events
-- Logger and event hub: `internal/event/*`; `event.Log` is the shared logger.
-- HTTP headers/constants: `pkg/http/header/*` — always prefer these in handlers and tests.
+利用者向け言語は日本語を正準とします。不要な言語資産は、runtime参照とbuild参照を確認してから削除します。
 
-Server Startup Flow (happy path)
-1) `photoprism start` (CLI) → `internal/commands/start.go`
-2) Config init, DB init/migrate, session cleanup worker
-3) `internal/server/start.go` builds Gin engine, middleware, API group, templates
-4) `internal/server/routes.go` registers UI, WebDAV, sharing, well‑known, and all `/api/v1/*` routes
-5) Workers and auto‑index start; health endpoints `/livez`, `/readyz` available
+## Local environment
 
-Common How‑Tos
-- Add a CLI command
-  - Create `internal/commands/<name>.go` with a `*cli.Command`
-  - Add it to `PhotoPrism` in `internal/commands/commands.go`
-  - Tests: prefer `RunWithTestContext` from `internal/commands/commands_test.go` to avoid `os.Exit`
+正準Composeは `compose.yaml` だけです。通常起動するserviceは次の2つです。
 
-- Add a REST endpoint
-  - Create handler in `internal/api/<area>.go` with Swagger annotations
-  - Register it in `internal/server/routes.go`
-  - Use helpers: `api.ClientIP(c)`, `header.BearerToken(c)`, `Abort*` functions
-  - Validate pagination bounds (default `count=100`, max `1000`, `offset>=0`) for list endpoints
-  - Run `make fmt-go swag-fmt && make swag`; keep docs accurate
-  - Tests: `go test ./internal/api -run <Name>` and focused helpers (`NewApiTest()`, `PerformRequest*`)
+- `photoprism`
+- `mariadb`
 
-- Add a config option
-  - Add field with tags to `internal/config/options.go`
-  - Register CLI flag/env in `internal/config/flags.go` via `EnvVars(...)`
-  - Expose a getter (e.g., in `config_server.go` or topic file)
-  - Append to `rows` in `*config.Report()` after the same option as in `options.go`
-  - If value must persist, write back to `options.yml` and reload into memory (prefer `Config.SaveOptionsPatch(...)` and related config-owned helpers over ad-hoc YAML logic).
-  - When you need the path to defaults/options/settings files, call `pkg/fs.ConfigFilePath` so `.yml` and `.yaml` stay interchangeable.
-  - Tests: cover CLI/env/file precedence (see `internal/config/test.go` helpers)
+Keycloak、dummy OIDC、dummy LDAP、Traefik、Prometheus、PostgreSQL、preview環境、multi-arch配布用Composeは正準ローカル環境に含めません。
 
-- Touch the DB schema
-  - Use GORM auto-migration, or add a custom migration in `internal/entity/migrate/<dialect>/...` and run `go generate` or `make generate` (runs `go generate` for all packages) 
-  - Bump/review version gates in `migrate.Version` usage via `config_db.go`
-  - Tests: run against SQLite by default; for MySQL cases, gate appropriately
+```bash
+cp .env.example .env
+make up
+make terminal
+make dep
+make build-all
+make start
+```
 
-Testing
-- Full suite: `make test` (frontend + backend). Backend only: `make test-go`.
-- Focused packages: `go test ./internal/<pkg> -run <Name>`.
-- CLI tests: `PHOTOPRISM_CLI=noninteractive` or pass `--yes` to avoid prompts; use `RunWithTestContext` to prevent `os.Exit`.
-- SQLite DSN in tests is per‑suite (not empty). Clean up files if you capture the DSN.
-- Frontend unit tests via Vitest are separate; see `frontend/CODEMAP.md`.
-- Config helpers automatically disable Hub service calls for tests (`hub.ApplyTestConfig()`).
-- Test configs auto-discover the repo `assets/` folder, so avoid adding per-package `PHOTOPRISM_ASSETS_PATH` shims unless you have an unusual layout.
+## 検証
 
-Security & Hot Spots (Where to Look)
-- Zip extraction (path traversal prevention): `pkg/fs/zip.go`
-  - Uses `safeJoin` to reject absolute/volume paths and `..` traversal; enforces per-file and total size limits.
-  - Tests: `pkg/fs/zip_test.go` covers abs/volume/.. cases and limits.
-- Force-aware Copy/Move and truncation-safe writes:
-  - App helpers: `internal/photoprism/mediafile.go` (`MediaFile.Copy/Move` with `force`).
-  - Utils: `pkg/fs/copy_move.go` — `fs.Copy` / `fs.Move` (use `O_TRUNC` to avoid trailing bytes).
-- FFmpeg command builders and encoders:
-  - Core: `internal/ffmpeg/transcode_cmd.go`, `internal/ffmpeg/remux.go`, `internal/ffmpeg/v360.go`.
-  - Encoders (string builders only): `internal/ffmpeg/{apple,intel,nvidia,vaapi,v4l}/avc.go`.
-  - Tests guard HW runs with `PHOTOPRISM_FFMPEG_ENCODER`; otherwise assert command strings and negative paths.
-- libvips thumbnails:
-  - Pipeline: `internal/thumb/vips.go` (`Vips` render entry, export params); init `internal/thumb/vips_init.go` (`VipsInit`); rotation `internal/thumb/vips_rotate.go` (`VipsRotate`); format conversion `internal/thumb/vips_convert.go` (`vipsConvert`, HEIC/AVIF via libheif).
-  - Sizes & names: `internal/thumb/sizes.go`, `internal/thumb/names.go`, `internal/thumb/filter.go`; face/marker crop helpers live in `internal/thumb/crop` (e.g., `ParseThumb`, `IsCroppedThumb`).
+変更に応じて最小のfocused checkから実行し、必要なbroader gateへ進みます。
 
-- Safe HTTP downloader:
-  - Shared utility: `pkg/http/safe` (`Download`, `Options`).
-  - Protections: scheme allow‑list (http/https), pre‑DNS + per‑redirect hostname/IP validation, final peer IP check, size and timeout enforcement, temp file `0600` + rename.
-  - Avatars: wrapper `internal/thumb/avatar.SafeDownload` applies stricter defaults (15s, 10 MiB, `AllowPrivate=false`, image‑focused `Accept`).
-  - Tests: `go test ./pkg/http/safe -count=1` (includes redirect SSRF cases); avatars: `go test ./internal/thumb/avatar -count=1`.
-- CDN guards for credential flows:
-  - Auth/session and OAuth/OIDC endpoints reject CDN-marked requests.
-  - Cluster bootstrap endpoint `POST /api/v1/cluster/nodes/register` also rejects CDN-marked requests to avoid caching responses that may contain bootstrap secrets.
+```bash
+make journal-test
+make test-short
+make test-js
+make build-go
+make build-js
+make lint
+```
 
-Performance & Limits
-- Prefer existing caches/workers/batching as per Makefile and code.
-- When adding list endpoints, default `count=100` (max `1000`); set `Cache-Control: no-store` for secrets.
+実行していないcheckをPASSとして扱いません。
 
-Conventions & Rules of Thumb
-- Respect package boundaries: code in `pkg/*` must not import `internal/*`.
-- Prefer constants/helpers from `pkg/http/header` over string literals.
-- Never log secrets; compare tokens constant‑time.
-- Don’t import Portal internals from cluster instance/service bootstraps; use HTTP.
-- Prefer small, hermetic unit tests; isolate filesystem paths with `t.TempDir()` and env like `PHOTOPRISM_STORAGE_PATH`.
-- Cluster nodes: identify by UUID v7 (internally stored as `NodeUUID`; exposed as `UUID` in API/CLI). The OAuth client ID (`NodeClientID`, exposed as `ClientID`) is for OAuth only. Registry lookups and CLI commands accept UUID, ClientID, or DNS-label name (priority in that order).
+## 残す機能
 
-Filesystem Permissions & io/fs Aliasing
-- Use `github.com/photoprism/photoprism/pkg/fs` permission variables when creating files/dirs:
-  - `fs.ModeDir` (0o755 with umask), `fs.ModeFile` (0o644 with umask), `fs.ModeConfigFile` (0o664), `fs.ModeSecretFile` (0o600), `fs.ModeBackupFile` (0o600).
-- Do not use stdlib `io/fs` mode bits as permission arguments. When importing stdlib `io/fs`, alias it (`iofs`/`gofs`) to avoid `fs.*` collisions with our package.
-- Prefer `filepath.Join` for filesystem paths across platforms; use `path.Join` for URLs only.
+- 写真・動画のindexing、検索、整理
+- albums
+- People / face clustering
+- Places
+- 明示的に選択した写真のsharing
+- 月次日記
+- 日本語UI
+- AIによる説明・要約・検索補助
+- Google Photos Picker APIを境界にしたユーザー選択式import
+- Web / PWA
 
-Cluster Registry & Provisioner Cheatsheet
-- UUID‑first everywhere: API paths `{uuid}`, Registry `Get/Delete/RotateSecret` by UUID; explicit `FindByClientID` exists for OAuth.
-- Node/DTO fields: `uuid` required; `clientId` optional; database metadata includes `driver`.
-- Provisioner naming (no slugs):
-  - database: `cluster_d<hmac11>`
-  - username: `cluster_u<hmac11>`
-  HMAC is base32 of ClusterUUID+NodeUUID; drivers currently `mysql|mariadb`.
-- DSN builder: `BuildDSN(driver, host, port, user, pass, name)`; warns and falls back to MySQL format for unsupported drivers.
-- Go tests live beside sources: for `path/to/pkg/<file>.go`, add tests in `path/to/pkg/<file>_test.go` (create if missing). For the same function, group related cases as `t.Run(...)` sub-tests (table-driven where helpful) and name each subtest string in PascalCase.
-- Public API and internal registry DTOs use normalized field names:
-  - `Database` (not `db`) with `Name`, `User`, `Driver`, `RotatedAt`.
-  - Node-level rotation timestamps use `RotatedAt`.
-  - Registration returns `Secrets.ClientSecret`; the CLI persists it under config `NodeClientSecret`.
-  - Admin responses may include `AdvertiseUrl` and `Database`; non-admin responses are redacted by default.
-- Cluster CLI highlights:
-  - `photoprism cluster register` supports `--site-url` and `--advertise-url`. Both values are always forwarded to the Portal regardless of whether they differ.
-  - Automatic MariaDB credential rotation logic lives in `config.ShouldAutoRotateDatabase()` and is shared by both the CLI and node bootstrap.
+## 削減対象
 
-Frequently Touched Files (by topic)
-- CLI wiring: `cmd/photoprism/photoprism.go`, `internal/commands/commands.go`
-- Server: `internal/server/start.go`, `internal/server/routes.go`, middleware in `internal/server/*.go`
-- API handlers: `internal/api/*.go` (plus `docs.go` for package docs)
-- Config: `internal/config/*` (`flags.go`, `config_db.go`, `config_server.go`, `options.go`)
-- Entities & queries: `internal/entity/*.go`, `internal/entity/query/*`
-- Migrations: `internal/entity/migrate/*`
-- Workers: `internal/workers/*`
-- Cluster: `internal/service/cluster/*`
-  - Theme support: `internal/service/cluster/theme/version.go` exposes `DetectVersion`, used by bootstrap, CLI, and API handlers to compare portal vs node theme revisions (prefers `fs.VersionTxtFile`, falls back to `app.js` mtime).
-  - Registration sanitizes `AppName`, `AppVersion`, and `Theme` with `clean.TypeUnicode`; defaults for app metadata come from `config.About()` / `config.Version()`. `cluster.RegisterResponse` now includes a `Theme` hint when the portal has a newer bundle so nodes can decide whether to download immediately.
-- Headers: `pkg/http/header/*`
+次はrepository-wideの参照を確認してから削減します。
 
-Downloads (CLI) & yt-dlp helpers
-- CLI command & core:
-  - `internal/commands/download.go` (flags, defaults, examples)
-  - `internal/commands/download_impl.go` (testable implementation used by CLI)
-- yt-dlp wrappers:
-  - `internal/photoprism/dl/options.go` (arg wiring; `FFmpegPostArgs` hook for `--postprocessor-args`)
-  - `internal/photoprism/dl/info.go` (metadata discovery)
-  - `internal/photoprism/dl/file.go` (file method with `--output`/`--print`)
-  - `internal/photoprism/dl/meta.go` (`CreatedFromInfo` fallback; `RemuxOptionsFromInfo`)
-- Importer:
-  - `internal/photoprism/get/import.go` (work pool)
-  - `internal/photoprism/import_options.go` (`ImportOptionsMove/Copy`)
-- Testing hints:
-  - Fast loops: `go test ./internal/photoprism/dl -run 'Options|Created|PostprocessorArgs' -count=1`
-  - CLI only: `go test ./internal/commands -run 'DownloadImpl|HelpFlags' -count=1`
-  - Disable ffmpeg when not needed: set `FFmpegBin = "/bin/false"`, `Settings.Index.Convert=false` in tests.
-  - Stub yt-dlp: shell script that prints JSON for `--dump-single-json`, creates a file and prints path for `--print`.
-  - Avoid importer dedup: vary file bytes (e.g., `YTDLP_DUMMY_CONTENT`) or dest.
+- billing / membership / sponsor / donation / upgrade
+- commercial Portal / team / cluster-management
+- commercial専用route、API client、config、UI、test
+- 日本語以外の不要な利用者向けtranslation catalog
+- 上流配布・demo・releaseだけに必要なdocker / setup / script
+- `.ldap.cfg`, `.qdrant.yaml` など、残存参照の確認が必要なfixture / config
+- 削除済み機能を説明するstale documentation
 
-Useful Make Targets (selection)
-- `make help` — overview of the most common targets (`make list` shows all)
-- `make dep` — install Go/JS deps in container
-- `make build-go` — build backend
-- `make test-go` — backend tests (SQLite)
-- `make swag` — generate Swagger JSON in `internal/api/swagger.json`
-- `make fmt-go swag-fmt` — format Go code and Swagger annotations
+## 削らないもの
 
-See Also
-- AGENTS.md (repository rules and tips for agents)
-- Developer Guide (Setup/Tests/API) — links in AGENTS.md → Sources of Truth
+- `LICENSE`, `NOTICE`
+- 上流由来の著作権表示・第三者ライセンス
+- People / Places / face clustering
+- originalsや個人写真を守るためのsecurity / permission処理
 
-Go Internal Import Rule
-- Keep temporary Go helpers inside `internal/...`; the Go toolchain blocks importing `internal/` packages from directories such as `/tmp`, so use a disposable path like `internal/tmp/` when you need scratch space.
-
-Fast Test Recipes
-- Filesystem + archives (fast): `go test ./pkg/fs -run 'Copy|Move|Unzip' -count=1`
-- Media helpers (fast): `go test ./pkg/media/... -count=1`
-- Thumbnails (libvips, moderate): `go test ./internal/thumb/... -count=1`
-- FFmpeg command builders (moderate): `go test ./internal/ffmpeg -run 'Remux|Transcode|Extract' -count=1`
+不要かどうか不明なものは、参照と実行証拠を確認するまで残します。
