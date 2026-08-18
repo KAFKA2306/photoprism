@@ -31,6 +31,22 @@
 
 写真機能としての face clustering / People / Places は削除対象ではありません。「画面から隠す」だけでは完了とせず、不要機能の実行時参照が残っていないことを監査します。
 
+## ローカル開発・動作確認
+
+ルートの `compose.yaml` を唯一の Docker Compose 設定とし、通常起動するサービスを PhotoPrism と MariaDB に限定します。認証デモ、リバースプロキシ、監視、代替DB、上流配布用の複数Compose設定は正準経路に含めません。
+
+```bash
+cp .env.example .env
+# .env の3つのパスワードを設定する
+make up
+make terminal
+make dep
+make build-all
+make start
+```
+
+`LICENSE`、`NOTICE`、上流由来の著作権表示・第三者ライセンスは削減対象ではありません。
+
 ## 月次日記
 
 `personal/journal/` に、写真と文章を月単位で静的HTMLへ出力する実装があります。
