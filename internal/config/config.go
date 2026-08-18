@@ -291,12 +291,6 @@ func (c *Config) Init() error {
 	// Report the download token configuration.
 	c.reportDownloadTokenOptions()
 
-	// Show support information.
-	if !c.Sponsor() {
-		log.Info(MsgSponsor)
-		log.Info(MsgSignUp)
-	}
-
 	// Show log message.
 	log.Debugf("config: successfully initialized [%s]", time.Since(start))
 	c.ready.Store(true)
@@ -860,17 +854,6 @@ func (c *Config) Demo() bool {
 	return c.options.Demo
 }
 
-// Sponsor reports if you have chosen to support our mission.
-func (c *Config) Sponsor() bool {
-	if Sponsor || c.options.Sponsor {
-		return true
-	} else if c.hub != nil {
-		Sponsor = c.Hub().Sponsor()
-	}
-
-	return Sponsor
-}
-
 // Develop checks if features under development should be enabled.
 func (c *Config) Develop() bool {
 	return Develop || Env(EnvDevelop)
@@ -948,7 +931,7 @@ func (c *Config) RenewApiKeys() {
 		return
 	}
 
-	if token := os.Getenv(EnvVar("CONNECT")); token != "" && !c.Hub().Sponsor() {
+	if token := os.Getenv(EnvVar("CONNECT")); token != "" {
 		_ = c.RenewApiKeysWithToken(token)
 	} else {
 		_ = c.RenewApiKeysWithToken("")

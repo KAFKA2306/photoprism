@@ -3,7 +3,7 @@
   "title": "月次写真日記",
   "type": "object",
   "additionalProperties": false,
-  "required": ["month", "title", "body", "photos", "visibility"],
+  "required": ["month", "title", "body", "photos", "status"],
   "properties": {
     "month": {
       "type": "string",
@@ -16,18 +16,39 @@
     "body": {
       "type": "string"
     },
-    "visibility": {
-      "enum": ["private", "public"],
-      "default": "private"
+    "status": {
+      "enum": ["draft", "ready", "public"],
+      "default": "draft",
+      "description": "draft=編集中、ready=本人確認済みだが非公開、public=公開出力可"
     },
     "places": {
       "type": "array",
       "items": {"type": "string"},
       "default": []
     },
-    "albums": {
+    "album_uids": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {"type": "string", "minLength": 1},
+      "default": []
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "default": []
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source"],
+        "properties": {
+          "source": {"enum": ["photoprism", "google_photos", "amazon_photos", "local", "text", "manual"]},
+          "source_id": {"type": "string"},
+          "imported_at": {"type": "string"},
+          "note": {"type": "string"}
+        }
+      },
       "default": []
     },
     "photos": {
@@ -41,7 +62,9 @@
           "alt": {"type": "string", "minLength": 1},
           "caption": {"type": "string"},
           "place": {"type": "string"},
-          "photo_uid": {"type": "string"}
+          "photo_uid": {"type": "string"},
+          "taken_at": {"type": "string"},
+          "source": {"enum": ["photoprism", "google_photos", "amazon_photos", "local", "manual"]}
         }
       }
     }
