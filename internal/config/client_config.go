@@ -68,7 +68,6 @@ type ClientConfig struct {
 	Test             bool                `json:"test"`
 	Demo             bool                `json:"demo"`
 	Portal           bool                `json:"portal"`
-	Sponsor          bool                `json:"sponsor"`
 	ReadOnly         bool                `json:"readonly"`
 	UploadNSFW       bool                `json:"uploadNSFW"`
 	UploadAllow      string              `json:"uploadAllow"`
@@ -88,9 +87,6 @@ type ClientConfig struct {
 	Lenses           entity.Lenses       `json:"lenses"`
 	Countries        entity.Countries    `json:"countries"`
 	Thumbs           ThumbSizes          `json:"thumbs"`
-	Tier             int                 `json:"tier"`
-	Membership       string              `json:"membership"`
-	Customer         string              `json:"customer"`
 	MapKey           string              `json:"mapKey"`
 	DownloadToken    string              `json:"downloadToken,omitempty"`
 	PreviewToken     string              `json:"previewToken,omitempty"`
@@ -224,10 +220,6 @@ func (c *Config) Flags() (flags []string) {
 		flags = append(flags, "demo")
 	}
 
-	if c.Sponsor() {
-		flags = append(flags, "sponsor")
-	}
-
 	if c.Develop() {
 		flags = append(flags, "develop")
 	}
@@ -324,7 +316,6 @@ func (c *Config) ClientPublic() *ClientConfig {
 		Test:             c.Test(),
 		Demo:             c.Demo(),
 		Portal:           c.Portal(),
-		Sponsor:          c.Sponsor(),
 		ReadOnly:         c.ReadOnly(),
 		Public:           c.Public(),
 		AuthMode:         c.AuthMode(),
@@ -339,9 +330,6 @@ func (c *Config) ClientPublic() *ClientConfig {
 		Cameras:          entity.Cameras{},
 		Lenses:           entity.Lenses{},
 		Countries:        entity.Countries{},
-		Tier:             c.Hub().Tier(),
-		Membership:       c.Hub().Membership(),
-		Customer:         "",
 		MapKey:           "",
 		Thumbs:           Thumbs,
 		Colors:           colors.All.List(),
@@ -424,7 +412,6 @@ func (c *Config) ClientShare() *ClientConfig {
 		Test:             c.Test(),
 		Demo:             c.Demo(),
 		Portal:           c.Portal(),
-		Sponsor:          c.Sponsor(),
 		ReadOnly:         c.ReadOnly(),
 		UploadNSFW:       c.UploadNSFW(),
 		UploadAllow:      c.UploadAllow().Accept(),
@@ -443,9 +430,6 @@ func (c *Config) ClientShare() *ClientConfig {
 		Countries:        entity.Countries{},
 		Colors:           colors.All.List(),
 		Thumbs:           Thumbs,
-		Tier:             c.Hub().Tier(),
-		Membership:       c.Hub().Membership(),
-		Customer:         c.Hub().Customer(),
 		MapKey:           c.Hub().MapKey(),
 		DownloadToken:    c.DownloadToken(),
 		PreviewToken:     c.PreviewToken(),
@@ -532,7 +516,6 @@ func (c *Config) ClientUser(withSettings bool) *ClientConfig {
 		Test:             c.Test(),
 		Demo:             c.Demo(),
 		Portal:           c.Portal(),
-		Sponsor:          c.Sponsor(),
 		ReadOnly:         c.ReadOnly(),
 		UploadNSFW:       c.UploadNSFW(),
 		UploadAllow:      c.UploadAllow().Accept(),
@@ -552,9 +535,6 @@ func (c *Config) ClientUser(withSettings bool) *ClientConfig {
 		Countries:        entity.Countries{},
 		Colors:           colors.All.List(),
 		Thumbs:           Thumbs,
-		Tier:             c.Hub().Tier(),
-		Membership:       c.Hub().Membership(),
-		Customer:         c.Hub().Customer(),
 		MapKey:           c.Hub().MapKey(),
 		DownloadToken:    c.DownloadToken(),
 		PreviewToken:     c.PreviewToken(),

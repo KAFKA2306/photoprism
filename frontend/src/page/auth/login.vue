@@ -218,7 +218,6 @@ export default {
       useRecoveryCode: false,
       code: "",
       enterCode: false,
-      sponsor: this.$config.isSponsor(),
       config: this.$config.values,
       siteDescription: this.$config.getSiteDescription(),
       wallpaperUri: this.$config.values.wallpaperUri,

@@ -207,22 +207,24 @@ func TestConfig_DisableSips(t *testing.T) {
 
 func TestConfig_DisableVector(t *testing.T) {
 	c := NewConfig(CliTestContext())
+	missing := c.RsvgConvertBin() == ""
 
-	assert.Equal(t, c.Sponsor(), !c.DisableVectors())
+	assert.Equal(t, missing, c.DisableVectors())
 	c.options.DisableVectors = true
 	assert.True(t, c.DisableVectors())
 	c.options.DisableVectors = false
-	assert.Equal(t, c.Sponsor(), !c.DisableVectors())
+	assert.Equal(t, missing, c.DisableVectors())
 }
 
 func TestConfig_DisableRsvgConvert(t *testing.T) {
 	c := NewConfig(CliTestContext())
+	missing := c.RsvgConvertBin() == ""
 
-	assert.Equal(t, c.Sponsor(), !c.DisableRsvgConvert())
+	assert.Equal(t, missing, c.DisableRsvgConvert())
 	c.options.DisableVectors = true
 	assert.True(t, c.DisableRsvgConvert())
 	c.options.DisableVectors = false
-	assert.Equal(t, c.Sponsor(), !c.DisableVectors())
+	assert.Equal(t, missing, c.DisableRsvgConvert())
 }
 
 func TestConfig_DisableRaw(t *testing.T) {

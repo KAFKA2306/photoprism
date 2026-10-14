@@ -102,15 +102,6 @@ $config.update().finally(() => {
   app.config.globalProperties.$config = $config;
   app.config.globalProperties.$clipboard = PhotoClipboard;
   app.config.globalProperties.$util = $util;
-  app.config.globalProperties.$sponsorFeatures = () => {
-    return $config.load().finally(() => {
-      if ($config.values.sponsor) {
-        return Promise.resolve();
-      } else {
-        return Promise.reject();
-      }
-    });
-  };
 
   // Create Vue 3 Gettext instance.
   const gettext = createGettext($config);

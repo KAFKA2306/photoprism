@@ -11,7 +11,6 @@ export default {
   props: {},
   data() {
     return {
-      sponsor: this.$config.isSponsor(),
       config: this.$config.values,
       rtl: this.$isRtl,
     };

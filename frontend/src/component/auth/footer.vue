@@ -32,7 +32,6 @@ export default {
     const config = this.$config;
     return {
       about: config.getAbout(),
-      sponsor: config.isSponsor(),
       caption: config.values.siteCaption ? config.values.siteCaption : config.values.siteTitle,
       legalUrl: config.values.legalUrl,
       legalInfo: config.values.legalInfo,

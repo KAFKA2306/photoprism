@@ -1,24 +1,23 @@
-name: "CodeQL"
+name: Quality
 
 on:
   push:
-    branches: [ develop, release ]
-  pull_request:
-    branches: [ develop ]
+    branches: [develop, release]
   schedule:
-    # Re-scan weekly so queries added upstream are applied to unchanged code.
-    - cron: '27 4 * * 1'
+    # Re-scan weekly so new CodeQL queries also cover unchanged code.
+    - cron: "27 4 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: Verify / CodeQL (${{ matrix.language }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -36,22 +35,32 @@ jobs:
             build-mode: none
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v7
 
-    - name: Set up Go
-      if: matrix.language == 'go'
-      uses: actions/setup-go@v7
-      with:
-        go-version-file: go.mod
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      - name: Set up Python
+        if: matrix.language == 'go'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
 
-    - name: CodeQL Analysis
-      uses: github/codeql-action/analyze@v4
-      with:
-        category: "/language:${{ matrix.language }}"
+      - name: Verify personal journal
+        if: matrix.language == 'go'
+        run: python -m unittest discover -s personal/journal/tests -v
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"

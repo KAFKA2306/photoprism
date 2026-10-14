@@ -53,12 +53,6 @@ func placesUpdateAction(ctx *cli.Context) error {
 	// Force update of all locations?
 	force := ctx.Bool("force")
 
-	// Show info in case the force option is used without support.
-	if force && !conf.Sponsor() && !conf.Test() {
-		log.Errorf("Since updating the location details of all pictures puts a high load on our infrastructure, this option cannot be used with our Community Edition.")
-		return nil
-	}
-
 	// Initialize database connection.
 	conf.InitDb()
 	defer conf.Shutdown()

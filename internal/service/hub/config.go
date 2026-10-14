@@ -78,47 +78,10 @@ func (c *Config) MapKey() string {
 	}
 }
 
-// Tier returns the numeric membership tier from the decoded session; zero indicates none.
-func (c *Config) Tier() int {
-	if sess, err := c.DecodeSession(true); err != nil {
-		return 0
-	} else {
-		return sess.Tier
-	}
-}
-
-// Membership returns the membership level as string.
-func (c *Config) Membership() string {
-	if !c.Sponsor() {
-		return string(StatusCommunity)
-	}
-
-	return string(c.Status)
-}
-
-// Customer returns the customer name.
-func (c *Config) Customer() string {
-	if sess, err := c.DecodeSession(true); err != nil {
-		return ""
-	} else {
-		return sess.Customer
-	}
-}
-
 // Propagate publishes the current credentials to dependent packages (e.g. places search).
 func (c *Config) Propagate() {
 	places.Key = c.Key
 	places.Secret = c.Secret
-}
-
-// Sponsor reports if you support the project.
-func (c *Config) Sponsor() bool {
-	switch c.Status {
-	case StatusUnknown, StatusNew, StatusCommunity:
-		return false
-	}
-
-	return len(c.Session) > 0 && len(c.MapKey()) > 0
 }
 
 // Sanitize verifies and sanitizes backend api credentials.

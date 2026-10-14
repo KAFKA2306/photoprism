@@ -531,7 +531,6 @@
 
     </v-form>
     <p-about-footer></p-about-footer>
-    <p-confirm-sponsor :visible="dialog.sponsor" @close="dialog.sponsor = false"></p-confirm-sponsor>
   </div>
 </template>
 
@@ -540,13 +539,11 @@ import Settings from "model/settings";
 import * as options from "options/options";
 import * as themes from "options/themes";
 import PAboutFooter from "component/about/footer.vue";
-import PConfirmSponsor from "component/confirm/sponsor.vue";
 
 export default {
   name: "PSettingsGeneral",
   components: {
     PAboutFooter,
-    PConfirmSponsor,
   },
   data() {
     return {
@@ -566,9 +563,6 @@ export default {
       mapsStyle: options.MapsStyle(this.$config.get("experimental")),
       currentMapsStyle: this.$config.getSettings().maps.style,
       languages: options.Languages(),
-      dialog: {
-        sponsor: false,
-      },
     };
   },
   created() {
@@ -605,27 +599,12 @@ export default {
       }
 
       const style = this.mapsStyle.find((s) => s.value === value);
-
       if (!style) {
         return false;
       }
 
-      this.$sponsorFeatures()
-        .then(() => {
-          this.currentMapsStyle = value;
-          this.onChange();
-        })
-        .catch(() => {
-          if (style.sponsor) {
-            this.dialog.sponsor = true;
-            this.$nextTick(() => {
-              this.settings.maps.style = this.currentMapsStyle;
-            });
-          } else {
-            this.currentMapsStyle = value;
-            this.onChange();
-          }
-        });
+      this.currentMapsStyle = value;
+      this.onChange();
     },
     onChange() {
       const locale = this.settings.changed("ui", "language");
