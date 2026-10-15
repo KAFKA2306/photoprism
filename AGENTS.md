@@ -177,3 +177,11 @@ Formatting and test entry points:
   - Don't add a Debian source to an Ubuntu base (or vice versa) to install a single missing package — the transitive deps drift, apt's solver pulls newer libraries from the foreign distro, and other build steps in the same `RUN` (e.g. `install-libheif.sh` running `apt-get install libavcodec-dev`) silently link against the wrong soname.
   - Symptoms surface much later as `dlopen: libfoo.so.N: cannot open shared object file` at image runtime, with the binary referencing a soname that exists only in the foreign distro.
   - If a package isn't available in the host distro's repos, prefer (a) a same-distro PPA / backports source, (b) a vendor-supplied .deb (e.g. Google Chrome from `dl.google.com`), or (c) a from-source build pinned to a known version.
+
+## Outcome-first task interpretation (Altitude / Depth / Range / Speed)
+
+- **Altitude:** Interpret a task as a verifiable user outcome, not only the named intermediate step. Infer the smallest justified acceptance criteria from the request and current repository state; do not silently expand scope or override explicit instructions.
+- **Depth:** Use primary/current evidence and real domain tools and methods. Verify the actual postcondition independently of agent self-report, preferably on the exact changed revision or target runtime.
+- **Range:** Combine code, data, tests, runtime/UI, and domain expertise when that materially improves the outcome, while respecting canonical owners and avoiding duplicate systems.
+- **Speed:** Complete authorized read-only and reversible work through implementation, focused checks, and read-back without unnecessary approval loops. Bound retries and stop at the proven outcome.
+- These principles never bypass repository-specific security, privacy, permission, publication, spending, destructive-action, or release boundaries. State verified results and any remaining `UNVERIFIED` layers.
